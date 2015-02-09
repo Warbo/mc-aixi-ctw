@@ -21,8 +21,8 @@ public:
 	virtual void performAction(const action_t action);
 
 	virtual action_t maxAction() const { return 1; }
-	virtual percept_t maxObservation() const { return 1; }
-	virtual percept_t maxReward() const { return 1; }
+	virtual percept_t maxObservation() const { return 9; }
+	virtual percept_t maxReward() const { return maxObservation(); }
 
 	virtual std::string print() const;
 
@@ -31,7 +31,7 @@ private:
 	virtual char read_serial();
 	virtual char* find_value(char*);
 	virtual int read_value(char*);
-	
+
 	/** Action: agent turns on its LED. */
 	static const action_t turnOff;
 
@@ -41,7 +41,8 @@ private:
 	/** File descriptors for serial access. */
 	int infd;
 	int outfd;
-	int threshold;
+	int step;
+        int off_val;
 };
 
 #endif // __LIGHTSENSOR_HPP__

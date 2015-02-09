@@ -11,12 +11,14 @@
 #include <unistd.h>
 
 LightSensor::LightSensor(options_t &options) {
+        int bits = maxObservation();
 	char* reply;
+        const char* dev = "/dev/ttyACM0";
 	// Input line
-	infd = open("/dev/ttyACM0", O_RDWR | O_NOCTTY | O_NDELAY);
+	infd = open(dev, O_RDWR | O_NOCTTY | O_NDELAY);
 	if (infd == -1 )
 	{
-		perror("open_port: Unable to open /dev/ttyACM0");
+		perror("open_port: Unable to open device");
 	}
 	else
 	{
@@ -24,10 +26,10 @@ LightSensor::LightSensor(options_t &options) {
 		printf("Connected...\n");
 	}
 	// Output line
-	outfd = open("/dev/ttyACM0", O_RDWR | O_NOCTTY | O_NDELAY);
+	outfd = open(dev, O_RDWR | O_NOCTTY | O_NDELAY);
 	if (outfd == -1 )
 	{
-		perror("open_port: Unable to open /dev/ttyACM0");
+		perror("open_port: Unable to open dev");
 	}
 	else
 	{
@@ -38,28 +40,34 @@ LightSensor::LightSensor(options_t &options) {
 	// Set the input and output in the Arduino
 	// TODO: Check the output for errors
 	write(outfd,"{\"query\":\"status\"}",18);
-	usleep(100);
+        reply = read_json();
+        std::cout << reply << " 0\n";
+        free(reply);
+        usleep(100);
 	write(outfd,"{\"mode\":{\"pin\":12,\"mode\":\"output\"}}",35);
 	reply = read_json();
+        std::cout << reply << " 1\n";
 	if (reply) {
 		free(reply);
 	}
 	write(outfd,"{\"mode\":{\"pin\":1,\"mode\":\"input\"}}",33);
 	reply = read_json();
+        std::cout << reply << " 2\n";
 	if (reply) {
 		free(reply);
 	}
 
 	// Now we calibrate our readings. First we turn the light off:
 	write(outfd,"{\"write\":{\"pin\":12,\"type\":\"digital\",\"value\":0}}\r",48);
-	int off_val;
 	int on_val;
 	char* start;
 	reply = read_json();
+        std::cout << reply << " 3\n";
 	free(reply);
 	// Then we read the light sensor
 	write(outfd,"{\"read\":{\"pin\":1,\"type\":\"analogue\"}}",36);
 	reply = read_json();
+        std::cout << reply << " 4\n";
 	if (reply) {
 		start = find_value(reply);
 		if (start) {
@@ -72,10 +80,13 @@ LightSensor::LightSensor(options_t &options) {
 		// Then we turn on the light:
 		write(outfd,"{\"write\":{\"pin\":12,\"type\":\"digital\",\"value\":1}}\r",48);
 		reply = read_json();
+                std::cout << reply << " 5\n";
 		free(reply);
 		// Then we read the light sensor
+                usleep(100);
 		write(outfd,"{\"read\":{\"pin\":1,\"type\":\"analogue\"}}",36);
 		reply = read_json();
+                std::cout << reply << " 6\n";
 		if (reply) {
 			start = find_value(reply);
 			if (start) {
@@ -87,28 +98,32 @@ LightSensor::LightSensor(options_t &options) {
 			free(reply);
 		}
 		else {
+                        perror("No reply");
 			exit(1);
 		}
 	}
 	else {
+                perror("No reply2");
 		exit(1);
 	}
-	// The threshold between good and bad is half-way between on and off
-	threshold = on_val - ((on_val - off_val) / 2);
-	
+	// Split the difference into steps
+        step = (on_val - off_val) / (1 << (bits - 1));
+        std::cout << "Step: " << step << "\n";
 	// Initial percept
 	m_observation = 0;
 	m_reward = m_observation;
+        std::cout << "Done\n";
 }
 
 void LightSensor::performAction(const action_t action) {
+        std::cout << "LightSensor::performAction\n";
 	//assert(isValidAction(action));
 	m_action = action;			// Save the action
 	int wr;						// Used for writing serial
 	char* buffer;				// This stores the JSON we get over serial
 	char* value_start;			// This points into our JSON at "value"
 	int observation = 0;		// Default to zero in case we get no value
-	
+
 	switch (m_action)
 	{
 		case 0:
@@ -133,15 +148,11 @@ void LightSensor::performAction(const action_t action) {
 		}
 		free(buffer);
 	}
-
-	if (observation < threshold) {
-		m_observation = 0;
-		m_reward = 0;
-	}
-	else {
-		m_observation = 1;
-		m_reward = 1;
-	}
+        std::cout << "observation: " << observation << "\n";
+        std::cout << "off_val: "     << off_val     << "\n";
+        std::cout << "step: "        << step        << "\n";
+        m_observation = (observation - off_val) / step;
+        m_reward = m_observation;
 }
 
 std::string LightSensor::print() const {
@@ -158,7 +169,7 @@ char LightSensor::read_serial() {
 	char this_value;
 	do {
 		read_count = read(infd, &this_value, 1);
-	} while ((read_count != 1) && (usleep(5) || 1));
+	} while ((read_count != 1) && (usleep(10) || 1));
 	return this_value;
 }
 
@@ -318,7 +329,7 @@ char* LightSensor::read_json() {
 		// Store this character in the buffer
 		json[index] = this_value;
 		index++;
-		
+
 		if (in_escape) {
 			// Handle escaping properly, since we want to keep proper track
 			// of string boundaries
