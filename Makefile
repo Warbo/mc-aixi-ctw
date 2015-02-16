@@ -1,4 +1,4 @@
-aixi: src/main.o src/agent.o src/search.o src/predict.o src/environment.o src/util.o src/pacman.o src/tictactoe.o src/tiger.o src/kuhnpoker.o src/maze.o src/rock-paper-scissors.o src/extendedtiger.o src/coinflip.o
+aixi: src/main.o src/agent.o src/search.o src/predict.o src/environment.o src/util.o src/pacman.o src/tictactoe.o src/tiger.o src/kuhnpoker.o src/maze.o src/rock-paper-scissors.o src/extendedtiger.o src/coinflip.o src/stdenv.o
 	g++ -O3 -Wall -o aixi src/*.o
 
 test-predict-build: aixi tests/test-predict.o

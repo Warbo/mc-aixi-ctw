@@ -13,15 +13,7 @@
 #include "util.hpp"
 
 // Environments
-#include "coinflip.hpp"
-#include "kuhnpoker.hpp"
-#include "maze.hpp"
-#include "pacman.hpp"
-#include "rock-paper-scissors.hpp"
-#include "tictactoe.hpp"
-#include "tiger.hpp"
-#include "extendedtiger.hpp"
-
+#include "stdenv.hpp"
 
 // Stream for logging
 std::ofstream logger; // A compact comma-separated value log
@@ -120,7 +112,7 @@ void mainLoop(Agent &ai, Environment &env, options_t &options) {
 
 		// Print environment state if verbose option is true
 		if (verbose) {
-  		    std::cout << env.print();
+		    std::cout << env.print();
 		}
 
 		// Update exploration rate
@@ -239,27 +231,7 @@ int main(int argc, char *argv[]) {
 	Environment *env;
 	std::string environment_name;
 	getRequiredOption(options, "environment", environment_name);
-	if (environment_name == "coin-flip") {
-		env = new CoinFlip(options);
-	} else if (environment_name == "extended-tiger") {
-		env = new ExtendedTiger(options);
-	} else if (environment_name == "kuhn-poker") {
-		env = new KuhnPoker(options);
-	} else if (environment_name == "maze") {
-		env = new Maze(options);
-	} else if (environment_name == "pacman") {
-		env = new PacMan(options);
-	} else if (environment_name == "rock-paper-scissors") {
-		env = new RockPaperScissors(options);
-	} else if (environment_name == "tictactoe") {
-		env = new TicTacToe(options);
-	} else if (environment_name == "tiger") {
-		env = new Tiger(options);
-	} else {
-		std::cerr << "ERROR: unknown environment '" << environment_name << "'"
-		    << std::endl;
-		return EXIT_FAILURE;
-	}
+	env = new StdEnv(options);
 
 	// Copy environment-related configuration options to options map
 	options["action-bits"] = toString(env->actionBits());
