@@ -21,7 +21,6 @@
 #include "tictactoe.hpp"
 #include "tiger.hpp"
 #include "extendedtiger.hpp"
-#include "light_sensor.hpp"
 
 
 // Stream for logging
@@ -55,7 +54,7 @@ void mainLoop(Agent &ai, Environment &env, options_t &options) {
 	bool terminate_check = options.count("terminate-age") > 0;
 	age_t terminate_age = getOption<age_t>(options, "terminate-age", 0);
 	assert(0 <= terminate_age);
-	
+
 	// Determine the cycle after which the agent stops learning (if ever)
 	bool stop_learning = options.count("learning-period") > 0;
 	int learning_period = getOption<int>(options, "learning-period", 0);
@@ -68,7 +67,7 @@ void mainLoop(Agent &ai, Environment &env, options_t &options) {
 		if (terminate_check && ai.age() > terminate_age) {
 			break;
 		}
-		
+
 		// Save the current clock cycle (to compute how long this cycle took)
 		clock_t cycle_start = clock();
 
@@ -79,7 +78,7 @@ void mainLoop(Agent &ai, Environment &env, options_t &options) {
 
 		if (learning_period > 0 && cycle > learning_period)
 			explore = false;
-		
+
 		// Update agent's environment model with the new percept
 		ai.modelUpdate(observation, reward);
 
@@ -97,10 +96,10 @@ void mainLoop(Agent &ai, Environment &env, options_t &options) {
 
 		// Send an action to the environment
 		env.performAction(action);
-		
+
 		// Update agent's environment model with the chosen action
 		ai.modelUpdate(action);
-		
+
 		// Calculate how long this cycle took
 		double time = double(clock() - cycle_start) / double(CLOCKS_PER_SEC);
 
@@ -150,7 +149,7 @@ void processOptions(std::ifstream &in, options_t &options) {
 	// configuration option on each line.
 	for (int lineno = 1; in.good(); lineno++) {
 		std::getline(in, line);
-		
+
 		if(line.size() == 0) {
 			continue;
 		}
@@ -255,10 +254,8 @@ int main(int argc, char *argv[]) {
 	} else if (environment_name == "tictactoe") {
 		env = new TicTacToe(options);
 	} else if (environment_name == "tiger") {
- 		env = new Tiger(options);
-	} else if (environment_name == "light_sensor") {
-		env = new LightSensor(options);
- 	} else {
+		env = new Tiger(options);
+	} else {
 		std::cerr << "ERROR: unknown environment '" << environment_name << "'"
 		    << std::endl;
 		return EXIT_FAILURE;
