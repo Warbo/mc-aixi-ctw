@@ -14,9 +14,9 @@ public:
 
   virtual void performAction(const action_t action);
 
-  virtual action_t  maxAction()      const { return 1; }
-  virtual percept_t maxObservation() const { return 1; }
-  virtual percept_t maxReward()      const { return 1; }
+  virtual action_t  maxAction()      const { return 255; }
+  virtual percept_t maxObservation() const { return 255; }
+  virtual percept_t maxReward()      const { return 255; }
 
   virtual std::string print() const;
 
@@ -25,10 +25,10 @@ private:
    * StdEnv::cDefaultInBits and StdEnv::cDefaultOutBits. */
   unsigned int m_inbits;
   unsigned int m_outbits;
+  unsigned int m_rewardbits;
 
   /** Default values for StdEnv::m_inbits and StdEnv::m_outbits. */
-  static const unsigned int cDefaultInBits;
-  static const unsigned int cDefaultOutBits;
+  static const unsigned int cDefaultBits;
 
   /** File handles */
   FILE *fin;
