@@ -5,5 +5,5 @@ stdenv.mkDerivation {
 
   src = ./.;
 
-  buildInputs = [];
+  buildInputs = [gdb];
 }

@@ -20,6 +20,10 @@ StdEnv::StdEnv(options_t &options) {
   assert(fin  != NULL);
   assert(fout != NULL);
 
+  // Disable input/output buffering
+  setvbuf(fin,  NULL, _IONBF, 0);
+  setvbuf(fout, NULL, _IONBF, 0);
+
   // Initial percept
   m_observation = 0;
   m_reward      = 0;

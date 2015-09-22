@@ -5,6 +5,7 @@
 #include <iostream>
 #include <string>
 #include <sstream>
+#include <unistd>
 
 #include "agent.hpp"
 #include "environment.hpp"
@@ -12,7 +13,10 @@
 #include "search.hpp"
 #include "util.hpp"
 
-// Environments
+// Environment variables (from the system)
+extern char **environ;
+
+// Environment models (which we learn)
 #include "stdenv.hpp"
 
 // Stream for logging
@@ -201,31 +205,38 @@ int main(int argc, char *argv[]) {
 	}
 
 	// Set up logging, print header
+	char *log = (argc > 2)? argv[2] : getenv("AIXI_LOG");
+	if (log == NULL) {
+		log = "/dev/null";
+	}
 	logger.open(argv[2]);
 	logger << "cycle, observation, reward, action, explored, "
 	    << "explore_rate, total reward, average reward, time, model size"
 	    << std::endl;
 
-
 	// Stores configuration options
 	options_t options;
 
 	// Default configuration values
-	options["ct-depth"] = "30";
-	options["agent-horizon"] = "5";
-	options["exploration"] = "0.0";     // do not explore
-	options["explore-decay"] = "1.0"; // exploration rate does not decay
+	options["ct-depth"]       = "30";
+	options["agent-horizon"]  = "5";
+	options["exploration"]    = "0.0";  // do not explore
+	options["explore-decay"]  = "1.0";  // exploration rate does not decay
 	options["mc-simulations"] = "300";
 
 	// Read configuration options
-	std::ifstream conf(argv[1]);
-	if (!conf.is_open()) {
-		std::cerr << "ERROR: Could not open file '" << argv[1]
-		    << "' now exiting" << std::endl;
-		return EXIT_FAILURE;
-	}
-	processOptions(conf, options);
-	conf.close();
+        if (argc > 1) {
+          std::ifstream conf(argv[1]);
+          if (!conf.is_open()) {
+            std::cerr << "ERROR: Could not open file '" << argv[1]
+                      << "' now exiting" << std::endl;
+            return EXIT_FAILURE;
+          }
+          processOptions(conf, options);
+          conf.close();
+        } else {
+
+        }
 
 	// Set up the environment.
 	Environment *env;
